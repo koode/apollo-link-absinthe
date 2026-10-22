@@ -1,0 +1,8 @@
+node_modules/
+dist/
+coverage/
+*.tgz
+.DS_Store
+test/server/_build/
+test/server/deps/
+test/server/.elixir_ls/

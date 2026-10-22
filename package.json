@@ -1,0 +1,118 @@
+{
+  "name": "apollo-link-absinthe",
+  "version": "0.0.0",
+  "description": "GraphQL subscriptions from Apollo Client to Absinthe over a Phoenix channel, with GraphQL errors kept intact.",
+  "license": "MIT",
+  "author": "Jeroen Visser <jeroen@koode.nl>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/koode/apollo-link-absinthe.git"
+  },
+  "homepage": "https://github.com/koode/apollo-link-absinthe#readme",
+  "bugs": "https://github.com/koode/apollo-link-absinthe/issues",
+  "keywords": [
+    "absinthe",
+    "phoenix",
+    "apollo",
+    "apollo-link",
+    "graphql",
+    "subscriptions",
+    "websocket"
+  ],
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./apollo3": {
+      "import": {
+        "types": "./dist/apollo3.d.mts",
+        "default": "./dist/apollo3.mjs"
+      },
+      "require": {
+        "types": "./dist/apollo3.d.ts",
+        "default": "./dist/apollo3.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "apollo3": [
+        "./dist/apollo3.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsdown",
+    "check:dist": "node scripts/check-dist.mjs",
+    "check:types-ts45": "pnpm --filter types-ts45 run typecheck",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "server:setup": "cd test/server && mix deps.get && mix compile",
+    "size": "size-limit",
+    "publint": "publint --strict",
+    "attw": "attw --pack . --profile node16",
+    "changeset": "changeset"
+  },
+  "peerDependencies": {
+    "@apollo/client": "^3.4.0 || ^4.0.0",
+    "graphql": "^15.0.0 || ^16.0.0 || ^17.0.0",
+    "phoenix": ">=1.6.0 <2.0.0"
+  },
+  "devDependencies": {
+    "@apollo/client": "4.3.5",
+    "@apollo/client-3": "npm:@apollo/client@3.4.17",
+    "@arethetypeswrong/cli": "0.18.5",
+    "@biomejs/biome": "2.6.2",
+    "@changesets/cli": "3.0.3",
+    "@size-limit/preset-small-lib": "14.2.0",
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/react": "16.3.3",
+    "@types/node": "24.19.2",
+    "@types/phoenix": "1.6.8",
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7",
+    "@vitest/coverage-v8": "4.1.12",
+    "graphql": "16.14.2",
+    "jsdom": "30.1.3",
+    "phoenix": "1.8.16",
+    "phoenix-1.6": "npm:phoenix@1.6.17",
+    "phoenix-1.8.8": "npm:phoenix@1.8.8",
+    "publint": "0.3.25",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "rxjs": "7.8.2",
+    "size-limit": "14.2.0",
+    "tsdown": "0.23.1",
+    "typescript": "5.9.3",
+    "undici": "8.12.3",
+    "vitest": "4.1.12"
+  }
+}
