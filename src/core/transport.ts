@@ -132,6 +132,13 @@ export class Transport implements IAbsintheTransport {
   private awaiting = new Set<IEntry>();
   /** Entries that were in flight when the channel crashed: pushed one at a time once nothing else is in flight. */
   private suspects: IEntry[] = [];
+  /**
+   * Docs that were in flight when the channel errored on an open socket. It
+   * is a crash only if the socket stays open until the next join: phoenix 1.6
+   * and 1.8.0 to 1.8.8 error the channels before they close the socket on a
+   * heartbeat timeout, which is a drop.
+   */
+  private crashSuspects: IEntry[] = [];
   private inFlight = 0;
   private readonly entries = new Map<string, IEntry>();
   private readonly byId = new Map<string, IEntry>();
@@ -241,6 +248,7 @@ export class Transport implements IAbsintheTransport {
     if (this.disposed) return;
     this.disposed = true;
     this.generation++;
+    this.crashSuspects = [];
     this.clearRejoinTimer();
     const channel = this.channel;
     this.channel = null;
@@ -279,8 +287,14 @@ export class Transport implements IAbsintheTransport {
     this.channel = channel;
     channel.onError(() => {
       if (this.channel !== channel) return;
-      // A socket drop errors every channel too; only an error on an open socket is a crash.
-      this.channelDown(this.socket.isConnected() ? "crash" : "drop");
+      // A socket drop errors every channel too; only an error on an open socket may be a crash.
+      const inFlight = this.socket.isConnected()
+        ? [...this.entries.values()].filter(
+            (entry) => entry.state === "subscribing",
+          )
+        : [];
+      this.channelDown();
+      this.crashSuspects = inFlight;
     });
     channel.onClose(() => {
       if (this.channel === channel) this.channelClosed();
@@ -317,6 +331,8 @@ export class Transport implements IAbsintheTransport {
     if (!this.openedSinceClose)
       this.emit("error", new AbsintheSocketError("CONNECT_FAILED"));
     this.openedSinceClose = false;
+    // The socket closed after the channel errored: that error was the drop, not a crash.
+    this.crashSuspects = [];
     if (this.channel) this.setStatus(this.downStatus());
   }
 
@@ -331,6 +347,7 @@ export class Transport implements IAbsintheTransport {
     this.firstOfGeneration = !this.everJoined;
     this.everJoined = true;
     this.setStatus("live");
+    this.countCrashes();
     const fresh: IEntry[] = [];
     const suspects: IEntry[] = [];
     // A drop came before this join, so every entry is pending: none is in flight or closing.
@@ -365,7 +382,7 @@ export class Transport implements IAbsintheTransport {
   private channelClosed(): void {
     // The server closed the channel (phx_close): phoenix forgets it and never joins it again.
     this.channel = null;
-    this.channelDown("drop");
+    this.channelDown();
     this.channelCloses++;
     if (this.entries.size === 0 && this.operations.size === 0) {
       this.setStatus("idle");
@@ -379,7 +396,20 @@ export class Transport implements IAbsintheTransport {
     }, rejoinAfterMs(this.channelCloses));
   }
 
-  private channelDown(reason: "drop" | "crash"): void {
+  /** The channel errored and the socket stayed open: each doc in flight then crashed it once more. */
+  private countCrashes(): void {
+    const crashed = this.crashSuspects;
+    this.crashSuspects = [];
+    for (const entry of crashed) {
+      if (this.entries.get(entry.key) !== entry) continue;
+      entry.crashes++;
+      if (entry.crashes < this.crashLimit) continue;
+      this.removeEntry(entry);
+      this.fail(entry, "CHANNEL_CRASHED");
+    }
+  }
+
+  private channelDown(): void {
     this.joined = false;
     this.generation++;
     this.byId.clear();
@@ -393,14 +423,6 @@ export class Transport implements IAbsintheTransport {
       if (entry.state === "closing") {
         this.entries.delete(entry.key);
         continue;
-      }
-      if (entry.state === "subscribing" && reason === "crash") {
-        entry.crashes++;
-        if (entry.crashes >= this.crashLimit) {
-          this.entries.delete(entry.key);
-          this.fail(entry, "CHANNEL_CRASHED");
-          continue;
-        }
       }
       this.resetEntry(entry);
     }
@@ -690,6 +712,7 @@ export class Transport implements IAbsintheTransport {
     this.awaiting.clear();
     this.joinedPending = false;
     this.suspects = [];
+    this.crashSuspects = [];
     this.inFlight = 0;
     for (const entry of entries) {
       this.clearRetryTimer(entry);

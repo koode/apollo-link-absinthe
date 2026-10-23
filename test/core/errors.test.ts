@@ -156,13 +156,18 @@ describe("transport errors", () => {
     const transport = createAbsintheTransport(openSocket());
     const crashing = record();
     const innocent = record();
+    const innocentLive = nextEvent(
+      transport,
+      "docLive",
+      (info) => info.query === tickedQuery,
+    );
     // Pushed in this order, so the innocent doc is in flight at both crashes.
     transport.subscribe({ query: crashesQuery, variables: {} }, crashing.sink);
     transport.subscribe({ query: tickedQuery, variables: {} }, innocent.sink);
 
     await eventually(() => expect(crashing.errors()).toHaveLength(1));
     expect(crashing.errors()[0]).toMatchObject({ code: "CHANNEL_CRASHED" });
-    await nextEvent(transport, "docLive");
+    await innocentLive;
     await server.publish("ticked", 1);
     expect(await innocent.waitForResults(1)).toHaveLength(1);
     expect(innocent.errors()).toEqual([]);

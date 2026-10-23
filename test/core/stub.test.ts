@@ -211,6 +211,45 @@ describe("suspects after a crash", () => {
   });
 });
 
+describe("crash or drop", () => {
+  test("a heartbeat timeout errors the channel before the socket closes: that is a drop, not a crash", () => {
+    const socket = new StubSocket();
+    const transport = createAbsintheTransport(socket, { crashLimit: 1 });
+    const first = record();
+    const second = record();
+    transport.subscribe(tick, first.sink);
+    transport.subscribe(other, second.sink);
+    const channel = socket.join();
+    expect(channel.docs()).toHaveLength(2);
+
+    socket.heartbeatTimeout();
+    socket.heartbeatTimeout();
+    socket.join();
+    expect(first.errors()).toEqual([]);
+    expect(second.errors()).toEqual([]);
+    // No suspects: both docs go out again at once, not one at a time.
+    expect(channel.docs()).toHaveLength(4);
+  });
+
+  test("an error on a socket that stays open is counted as a crash at the next join", () => {
+    const socket = new StubSocket();
+    const transport = createAbsintheTransport(socket, { crashLimit: 1 });
+    const crashing = record();
+    const left = record();
+    transport.subscribe(tick, crashing.sink);
+    const stop = transport.subscribe(other, left.sink);
+    const channel = socket.join();
+
+    channel.error();
+    expect(crashing.errors()).toEqual([]);
+    stop();
+    channel.joinPush.reply("ok", {});
+    expect(crashing.errors()[0]).toMatchObject({ code: "CHANNEL_CRASHED" });
+    expect(left.events).toEqual([]);
+    expect(transport.activeCount()).toBe(0);
+  });
+});
+
 describe("operations", () => {
   test("an operation queued before the join survives a failed connect and is sent once joined", () => {
     const socket = new StubSocket();

@@ -149,6 +149,16 @@ export class StubSocket implements IPhoenixSocketLike {
     for (const callback of this.closeCallbacks) callback();
   }
 
+  /**
+   * Phoenix 1.6 and 1.8.0 to 1.8.8 on a heartbeat timeout: the channels error
+   * while the socket still reports open, and the close comes after.
+   */
+  heartbeatTimeout(): void {
+    this.current.error();
+    this.connected = false;
+    for (const callback of this.closeCallbacks) callback();
+  }
+
   /** Opens and joins the current channel. */
   join(): StubChannel {
     if (!this.connected) this.open();
