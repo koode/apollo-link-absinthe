@@ -1,6 +1,10 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
   "files": {
     "includes": [
       "**",
@@ -27,7 +31,11 @@
       "bracketSpacing": true
     }
   },
-  "json": { "formatter": { "trailingCommas": "none" } },
+  "json": {
+    "formatter": {
+      "trailingCommas": "none"
+    }
+  },
   "linter": {
     "enabled": true,
     "rules": {
@@ -39,32 +47,42 @@
             "strictCase": false,
             "conventions": [
               {
-                "selector": { "kind": "interface" },
+                "selector": {
+                  "kind": "interface"
+                },
                 "match": "I([A-Z].*)",
                 "formats": ["PascalCase"]
               },
               {
-                "selector": { "kind": "typeParameter" },
+                "selector": {
+                  "kind": "typeParameter"
+                },
                 "match": "T([A-Z].*)",
                 "formats": ["PascalCase"]
               },
               {
-                "selector": { "kind": "objectLiteralProperty" },
+                "selector": {
+                  "kind": "objectLiteralProperty"
+                },
                 "formats": [
                   "camelCase",
                   "PascalCase",
                   "CONSTANT_CASE",
                   "snake_case"
-                ]
+                ],
+                "match": "_{0,2}([a-zA-Z].*)"
               },
               {
-                "selector": { "kind": "typeProperty" },
+                "selector": {
+                  "kind": "typeProperty"
+                },
                 "formats": [
                   "camelCase",
                   "PascalCase",
                   "CONSTANT_CASE",
                   "snake_case"
-                ]
+                ],
+                "match": "_{0,2}([a-zA-Z].*)"
               }
             ]
           }
@@ -76,11 +94,21 @@
   "overrides": [
     {
       "includes": ["*.config.ts", "*.config.mts"],
-      "linter": { "rules": { "style": { "noDefaultExport": "off" } } }
+      "linter": {
+        "rules": {
+          "style": {
+            "noDefaultExport": "off"
+          }
+        }
+      }
     }
   ],
   "assist": {
     "enabled": true,
-    "actions": { "source": { "organizeImports": "on" } }
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
   }
 }

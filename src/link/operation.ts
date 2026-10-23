@@ -12,7 +12,7 @@ import type {
 /** The part of an Apollo operation the link reads; the same in Apollo 3 and 4. */
 export interface IOperationLike {
   query: DocumentNode;
-  variables?: Variables | undefined;
+  variables: Variables;
   operationName?: string | undefined;
 }
 
@@ -78,7 +78,7 @@ export function runOperation<TOperation extends IOperationLike>(
     : getAbsintheTransport(resolved, options.transport);
   const request = {
     query: printOnce(operation.query),
-    variables: operation.variables ?? {},
+    variables: operation.variables,
   };
   return isSubscriptionOperation(operation)
     ? transport.subscribe(request, sink)
