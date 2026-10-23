@@ -80,7 +80,8 @@
     "size": "size-limit",
     "publint": "publint --strict",
     "attw": "attw --pack .",
-    "changeset": "changeset"
+    "changeset": "changeset",
+    "release": "pnpm build && changeset publish"
   },
   "peerDependencies": {
     "@apollo/client": "^3.4.0 || ^4.0.0",

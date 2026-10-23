@@ -1,2 +1,3 @@
 packages:
+  - "."
   - test/types-ts45

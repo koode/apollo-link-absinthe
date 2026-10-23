@@ -11,7 +11,8 @@
       "!test/server",
       "!**/dist",
       "!**/coverage",
-      "!pnpm-lock.yaml"
+      "!pnpm-lock.yaml",
+      "!.changeset"
     ]
   },
   "formatter": {

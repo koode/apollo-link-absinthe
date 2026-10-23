@@ -1,0 +1,127 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The same versions as mise.toml. setup-beam installs prebuilt Erlang,
+  # where mise would compile it from source on every cache miss.
+  OTP_VERSION: "28.5.0.3"
+  ELIXIR_VERSION: "1.20.2-otp-28"
+
+jobs:
+  lint:
+    name: Lint and typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: jdx/mise-action@6be3c7ed4c21d4f76b208d351d95aac273ebb76d # v5.2.4
+        with:
+          install_args: node pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+
+  test:
+    name: Tests (phoenix ${{ matrix.phoenix }}, Apollo ${{ matrix.apollo }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        phoenix: ["1.6", "1.8"]
+        apollo: ["3", "4"]
+    env:
+      PHOENIX_CLIENT: ${{ matrix.phoenix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: jdx/mise-action@6be3c7ed4c21d4f76b208d351d95aac273ebb76d # v5.2.4
+        with:
+          install_args: node pnpm
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+        with:
+          otp-version: ${{ env.OTP_VERSION }}
+          elixir-version: ${{ env.ELIXIR_VERSION }}
+          version-type: strict
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            test/server/deps
+            test/server/_build
+          key: test-server-${{ runner.os }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles('test/server/mix.lock') }}
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm server:setup
+      # The core suite runs against the real Absinthe server; the Apollo
+      # suite of this row against the same server.
+      - run: pnpm exec vitest run --project core --project apollo${{ matrix.apollo }}
+
+  coverage:
+    name: Coverage (every suite)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: jdx/mise-action@6be3c7ed4c21d4f76b208d351d95aac273ebb76d # v5.2.4
+        with:
+          install_args: node pnpm
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+        with:
+          otp-version: ${{ env.OTP_VERSION }}
+          elixir-version: ${{ env.ELIXIR_VERSION }}
+          version-type: strict
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            test/server/deps
+            test/server/_build
+          key: test-server-${{ runner.os }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles('test/server/mix.lock') }}
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm server:setup
+      - run: pnpm test:coverage
+
+  latest-server:
+    name: Tests against the latest Phoenix and Absinthe
+    runs-on: ubuntu-latest
+    # Early warning only: the pinned versions are the ones a production app runs.
+    continue-on-error: true
+    env:
+      PHOENIX_VERSION: "~> 1.8"
+      ABSINTHE_VERSION: "~> 1.11"
+      ABSINTHE_PHOENIX_VERSION: "~> 2.0"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: jdx/mise-action@6be3c7ed4c21d4f76b208d351d95aac273ebb76d # v5.2.4
+        with:
+          install_args: node pnpm
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+        with:
+          otp-version: ${{ env.OTP_VERSION }}
+          elixir-version: ${{ env.ELIXIR_VERSION }}
+          version-type: strict
+      - run: pnpm install --frozen-lockfile
+      - working-directory: test/server
+        run: mix deps.unlock --all && mix deps.get && mix compile
+      - run: pnpm exec vitest run
+
+  build:
+    name: Build and package checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: jdx/mise-action@6be3c7ed4c21d4f76b208d351d95aac273ebb76d # v5.2.4
+        with:
+          install_args: node pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm check:dist
+      - run: pnpm check:types-ts45
+      - run: pnpm publint
+      - run: pnpm attw
+      - run: pnpm size
