@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "description": "GraphQL subscriptions from Apollo Client to Absinthe over a Phoenix channel, with GraphQL errors kept intact.",
   "license": "MIT",
+  "type": "commonjs",
   "author": "Jeroen Visser <jeroen@koode.nl>",
   "repository": {
     "type": "git",
@@ -78,7 +79,7 @@
     "server:setup": "cd test/server && mix deps.get && mix compile",
     "size": "size-limit",
     "publint": "publint --strict",
-    "attw": "attw --pack . --profile node16",
+    "attw": "attw --pack .",
     "changeset": "changeset"
   },
   "peerDependencies": {

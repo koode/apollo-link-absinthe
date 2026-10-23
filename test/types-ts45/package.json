@@ -1,0 +1,16 @@
+{
+  "name": "types-ts45",
+  "private": true,
+  "description": "Type-checks the published declarations the way an Apollo 3 app consumes them: TypeScript 4.5, moduleResolution node, Apollo 3.4, graphql 15, @types/phoenix 1.5.",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@apollo/client": "3.4.13",
+    "@types/phoenix": "1.5.4",
+    "apollo-link-absinthe": "workspace:*",
+    "graphql": "15.6.0",
+    "phoenix": "1.6.6",
+    "typescript": "4.5.4"
+  }
+}

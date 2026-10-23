@@ -1,0 +1,30 @@
+[
+  {
+    "name": "core transport",
+    "path": "dist/index.mjs",
+    "import": "{ getAbsintheTransport }",
+    "ignore": ["@apollo/client", "graphql", "phoenix"],
+    "limit": "3.5 kB"
+  },
+  {
+    "name": "core with the managed socket",
+    "path": "dist/index.mjs",
+    "import": "{ createPhoenixSocket }",
+    "ignore": ["@apollo/client", "graphql", "phoenix"],
+    "limit": "4.5 kB"
+  },
+  {
+    "name": "Apollo 4 link",
+    "path": "dist/index.mjs",
+    "import": "{ createAbsintheLink, splitSubscriptions }",
+    "ignore": ["@apollo/client", "graphql", "phoenix"],
+    "limit": "4.5 kB"
+  },
+  {
+    "name": "Apollo 3 link",
+    "path": "dist/apollo3.mjs",
+    "import": "{ createAbsintheLink, splitSubscriptions }",
+    "ignore": ["@apollo/client", "graphql", "phoenix"],
+    "limit": "4.5 kB"
+  }
+]

@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "es2019",
+    "lib": ["dom", "es2019"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "strict": true,
+    "skipLibCheck": false,
+    "noEmit": true,
+    "types": [],
+    "baseUrl": ".",
+    "paths": {
+      "@apollo/client": ["node_modules/@apollo/client"],
+      "@apollo/client/*": ["node_modules/@apollo/client/*"],
+      "graphql": ["node_modules/graphql"],
+      "graphql/*": ["node_modules/graphql/*"],
+      "phoenix": ["node_modules/@types/phoenix"]
+    }
+  },
+  "files": ["consumer.ts"]
+}

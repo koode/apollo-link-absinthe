@@ -93,10 +93,43 @@ importers:
         specifier: 8.22.0
         version: 8.22.0
 
+  test/types-ts45:
+    dependencies:
+      '@apollo/client':
+        specifier: 3.4.13
+        version: 3.4.13(graphql@15.6.0)(react@18.3.1)
+      '@types/phoenix':
+        specifier: 1.5.4
+        version: 1.5.4
+      apollo-link-absinthe:
+        specifier: workspace:*
+        version: link:../..
+      graphql:
+        specifier: 15.6.0
+        version: 15.6.0
+      phoenix:
+        specifier: 1.6.6
+        version: 1.6.6
+      typescript:
+        specifier: 4.5.4
+        version: 4.5.4
+
 packages:
 
   '@andrewbranch/untar.js@1.0.4':
     resolution: {integrity: sha512-pVXSwPsLuw8IGLo2Di0EaOfsk+ntVvpkk942J/sHYIkwvtKUakEcPh7HBgZ6tuimgzKSEHgCvO4XgQ05DEbwDw==}
+
+  '@apollo/client@3.4.13':
+    resolution: {integrity: sha512-/nH8z/0X6WJ+wtUREHTlKQGX4lo6u3XkF1hy+k4eCxLZzT5+VRw1rm92iIkj1H85vep/eE/KV3DdRq1x3t9NnQ==}
+    peerDependencies:
+      graphql: ^14.0.0 || ^15.0.0
+      react: ^16.8.0 || ^17.0.0
+      subscriptions-transport-ws: ^0.9.0
+    peerDependenciesMeta:
+      react:
+        optional: true
+      subscriptions-transport-ws:
+        optional: true
 
   '@apollo/client@3.4.17':
     resolution: {integrity: sha512-MDt2rwMX1GqodiVEKJqmDmAz8xr0qJmq5PdWeIt0yDaT4GOkKYWZiWkyfhfv3raTk8PyJvbsNG9q2CqmUrlGfg==}
@@ -570,6 +603,9 @@ packages:
   '@types/node@24.19.2':
     resolution: {integrity: sha512-93d49wCWJkCyN87MxLpNN6KXPCwFw7bVUg79mGUV1OS40JGWwVCr8n61DXCSqz7CV6/VfPkb7xec7uP2M+QHWQ==}
 
+  '@types/phoenix@1.5.4':
+    resolution: {integrity: sha512-L5eZmzw89eXBKkiqVBcJfU1QGx9y+wurRIEgt0cuLH0hwNtVUxtx+6cu0R2STwWj468sjXyBYPYDtGclUd1kjQ==}
+
   '@types/phoenix@1.6.8':
     resolution: {integrity: sha512-8uBiGk2kDk+e0/9eq8CWuDG5VLrS50roV4doR3xn21/EL8olbWSi2TBNa/CFJS00VLOuawH/UGQQsn+2W8tNrA==}
 
@@ -915,6 +951,10 @@ packages:
     peerDependencies:
       graphql: ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
 
+  graphql@15.6.0:
+    resolution: {integrity: sha512-WJR872Zlc9hckiEPhXgyUftXH48jp2EjO5tgBBOyNMRJZ9fviL2mJBD6CAysk6N5S0r9BTs09Qk39nnJBkvOXQ==}
+    engines: {node: '>= 10.x'}
+
   graphql@16.14.2:
     resolution: {integrity: sha512-Chq1s4CY7jmh8gO2qvLIJyfCDIN+EHLFW/9iShnp1z8FjBQMoodWP1kDC36VAMXXIvAjj4ARa7ntfAV2BrjsbA==}
     engines: {node: ^12.22.0 || ^14.16.0 || ^16.0.0 || >=17.0.0}
@@ -1165,6 +1205,9 @@ packages:
   phoenix@1.6.17:
     resolution: {integrity: sha512-nDEw3+JHDjjjsG7GMKQUcynhX7i9oPx/Wk5dUy/0kf3RTWkpk2gE4w2+dGMMxikvy9hEBqvzD1eLhv9g8G3VnQ==}
 
+  phoenix@1.6.6:
+    resolution: {integrity: sha512-KLNHVlrZH8UAoEzeCS1XBI9z5juWz0gZ/+No7j5p/byVINnd+del9H5vtBMzQgZa3ZcUjVVZcQR8bKdnH/FmMg==}
+
   phoenix@1.8.16:
     resolution: {integrity: sha512-bNNJkYBnES2MHo8XjBg6ROK7iU7FeYfkANpTnYzh2ecOipI+8ZF1wiiWdvqv2YfV4MVb9yFJBE2BPF+RXgXXuw==}
 
@@ -1404,6 +1447,11 @@ packages:
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
+  typescript@4.5.4:
+    resolution: {integrity: sha512-VgYs2A2QIRuGphtzFV7aQJduJ2gyfTljngLzjpfW9FoYZF6xuw1W0vW9ghCKLfcWrCFxK81CSGRAvS1pn4fIUg==}
+    engines: {node: '>=4.2.0'}
+    hasBin: true
+
   typescript@5.6.1-rc:
     resolution: {integrity: sha512-E3b2+1zEFu84jB0YQi9BORDjz9+jGbwwy1Zi3G0LUNw7a7cePUrHMRNy8aPh53nXpkFGVHSxIZo5vKTfYaFiBQ==}
     engines: {node: '>=14.17'}
@@ -1606,6 +1654,24 @@ packages:
 snapshots:
 
   '@andrewbranch/untar.js@1.0.4': {}
+
+  '@apollo/client@3.4.13(graphql@15.6.0)(react@18.3.1)':
+    dependencies:
+      '@graphql-typed-document-node/core': 3.2.0(graphql@15.6.0)
+      '@wry/context': 0.6.1
+      '@wry/equality': 0.5.7
+      '@wry/trie': 0.3.2
+      graphql: 15.6.0
+      graphql-tag: 2.12.7(graphql@15.6.0)
+      hoist-non-react-statics: 3.3.2
+      optimism: 0.16.2
+      prop-types: 15.8.1
+      symbol-observable: 4.0.0
+      ts-invariant: 0.9.4
+      tslib: 2.8.1
+      zen-observable-ts: 1.1.0
+    optionalDependencies:
+      react: 18.3.1
 
   '@apollo/client@3.4.17(graphql@16.14.2)(react@18.3.1)':
     dependencies:
@@ -1893,6 +1959,10 @@ snapshots:
 
   '@exodus/bytes@1.16.0': {}
 
+  '@graphql-typed-document-node/core@3.2.0(graphql@15.6.0)':
+    dependencies:
+      graphql: 15.6.0
+
   '@graphql-typed-document-node/core@3.2.0(graphql@16.14.2)':
     dependencies:
       graphql: 16.14.2
@@ -2038,6 +2108,8 @@ snapshots:
   '@types/node@24.19.2':
     dependencies:
       undici-types: 7.24.6
+
+  '@types/phoenix@1.5.4': {}
 
   '@types/phoenix@1.6.8': {}
 
@@ -2324,10 +2396,17 @@ snapshots:
     dependencies:
       resolve-pkg-maps: 1.0.0
 
+  graphql-tag@2.12.7(graphql@15.6.0):
+    dependencies:
+      graphql: 15.6.0
+      tslib: 2.8.1
+
   graphql-tag@2.12.7(graphql@16.14.2):
     dependencies:
       graphql: 16.14.2
       tslib: 2.8.1
+
+  graphql@15.6.0: {}
 
   graphql@16.14.2: {}
 
@@ -2555,6 +2634,8 @@ snapshots:
 
   phoenix@1.6.17: {}
 
+  phoenix@1.6.6: {}
+
   phoenix@1.8.16: {}
 
   phoenix@1.8.8: {}
@@ -2774,6 +2855,8 @@ snapshots:
       - vue-tsc
 
   tslib@2.8.1: {}
+
+  typescript@4.5.4: {}
 
   typescript@5.6.1-rc: {}
 
