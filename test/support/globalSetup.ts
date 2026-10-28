@@ -67,6 +67,7 @@ export async function teardown(): Promise<void> {
     setTimeout(resolve, stopTimeoutMs);
   });
   await Promise.race([exited, timeout]);
+  // oxlint-disable-next-line typescript/no-unnecessary-condition -- exitCode changes when the child exits during the race above; the type narrowing before the await cannot see that.
   if (child.exitCode === null && child.pid !== undefined) child.kill();
 }
 

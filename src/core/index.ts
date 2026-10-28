@@ -1,7 +1,4 @@
-export {
-  docRetryBackoffMs,
-  jitteredReconnectAfterMs,
-} from "./backoff";
+export { docRetryBackoffMs, jitteredReconnectAfterMs } from "./backoff";
 export { canonicalJson } from "./canonical";
 export {
   AbsintheSocketError,

@@ -358,6 +358,7 @@ export class Transport implements IAbsintheTransport {
     this.suspects = suspects;
     for (const entry of fresh) this.pushDoc(entry);
     // The drop before this join failed every operation that was sent.
+    // oxlint-disable-next-line unicorn/no-useless-spread -- a snapshot: the observers sendOperation reaches may start or stop operations.
     for (const operation of [...this.operations]) this.sendOperation(operation);
     this.pushNextSuspect();
     this.checkJoined();
@@ -426,6 +427,7 @@ export class Transport implements IAbsintheTransport {
       }
       this.resetEntry(entry);
     }
+    // oxlint-disable-next-line unicorn/no-useless-spread -- a snapshot: the observers called here may start or stop operations.
     for (const operation of [...this.operations]) {
       if (!operation.sent) continue;
       this.operations.delete(operation);
@@ -683,6 +685,7 @@ export class Transport implements IAbsintheTransport {
   }
 
   private deliver(entry: IEntry, result: IAbsintheResult): void {
+    // oxlint-disable-next-line unicorn/no-useless-spread -- a snapshot: an observer may unsubscribe itself or another from next().
     for (const registration of [...entry.registrations])
       safely(() => registration.sink.next(result));
   }

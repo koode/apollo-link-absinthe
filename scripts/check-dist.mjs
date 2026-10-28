@@ -52,6 +52,7 @@ Object.defineProperty(globalThis, "window", {
     const reader = stack.split("\n")[2] ?? "";
     if (reader.includes("/dist/"))
       problems.push(`window was read at import time: ${reader.trim()}`);
+    // oxlint-disable-next-line unicorn/no-useless-undefined -- a getter must return a value (getter-return), and window is meant to read as undefined.
     return undefined;
   },
 });

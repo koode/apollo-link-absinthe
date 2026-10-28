@@ -44,7 +44,7 @@ export interface IManagedPhoenixSocketLike extends IPhoenixSocketLike {
 /** The phoenix `Socket` class or a stand-in with the same constructor. */
 export type PhoenixSocketConstructor<TSocket> = new (
   endPoint: string,
-  // biome-ignore lint/suspicious/noExplicitAny: the options type differs per phoenix version and type package.
+  // oxlint-disable-next-line typescript/no-explicit-any -- the options type differs per phoenix version and type package; any in this parameter is what lets every Socket class fit.
   options?: any,
 ) => TSocket;
 

@@ -34,6 +34,7 @@ export function createAbsintheTransport(
     transports.delete(socket),
   );
   transports.set(socket, transport);
+  // oxlint-disable-next-line unicorn/no-useless-spread -- a snapshot: a listener may add or remove listeners while the loop runs.
   for (const listener of [...createdListeners]) listener(transport, socket);
   return transport;
 }

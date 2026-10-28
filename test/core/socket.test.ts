@@ -28,6 +28,7 @@ const socketOptions = {
 function managed(
   options: IManagedSocketOptions<IManagedPhoenixSocketLike> = {},
 ): IManagedSocket<IManagedPhoenixSocketLike> {
+  // oxlint-disable-next-line typescript/no-unnecessary-type-arguments -- without it TSocket is inferred from Socket as phoenix's own Socket, which IManagedSocketOptions<IManagedPhoenixSocketLike> does not fit.
   const created = createPhoenixSocket<IManagedPhoenixSocketLike>(socketUrl(), {
     Socket,
     reconnectAfterMs: () => 50,

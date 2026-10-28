@@ -3,6 +3,7 @@
 GraphQL subscriptions from [Apollo Client](https://www.apollographql.com/docs/react/) to [Absinthe](https://hexdocs.pm/absinthe) over a Phoenix channel.
 
 It replaces `@absinthe/socket` and `@absinthe/socket-apollo-link`, and fixes what those get wrong:
+
 - **GraphQL errors stay GraphQL errors.** A refused subscription or an error inside a pushed result reaches `useSubscription` and your error link with `extensions.code`, `path`, `locations` and every other field the server sent. The old link turned them into `new Error("request: <messages>")`.
 - **Subscriptions come back after a drop**, and you are told when they are live again (`joined`), so you can refetch what you missed.
 - **Identical subscriptions share one server subscription** (refcounted). With a `context_id`, Absinthe gives identical documents the same id, so without this every push would arrive twice.
@@ -80,6 +81,7 @@ TypeScript 4.5 with `moduleResolution: node` is supported: `typesVersions` maps 
 ## How it works
 
 One **transport** per socket owns Absinthe's `__absinthe__:control` channel and all protocol state. It has no Apollo in it; the Apollo links are thin wrappers.
+
 - The first subscription creates and joins the control channel (and connects the socket, unless `connect: "manual"`). Nothing happens at import.
 - Documents are sent only while the channel is joined.
 - Identical subscriptions (same document, same variables in any key order) share one server subscription. The `unsubscribe` goes out when the last observer leaves, also when that happens while the subscription is still being set up.
@@ -203,10 +205,7 @@ function createPhoenixSocket<TSocket>(
     };
     reconnectAfterMs?: (tries: number) => number; // default: full jitter, 500 ms to 30 s
     socketOptions?: Record<string, unknown>; // passed to new Socket(...)
-    Socket?: new (
-      url: string,
-      options?: object,
-    ) => TSocket; // default: Socket from "phoenix"
+    Socket?: new (url: string, options?: object) => TSocket; // default: Socket from "phoenix"
     transport?: ITransportOptions;
   },
 ): {
@@ -314,6 +313,7 @@ createPhoenixSocket(url, {
 ## Server rendering
 
 Nothing runs at import (`sideEffects: false`, no `window` access at module scope). On the server:
+
 - `splitSubscriptions` routes everything to HTTP;
 - `createAbsintheLink` completes subscriptions at once and never calls the source function;
 - `createPhoenixSocket` builds no socket: you get an inert stand-in and a disposed transport.
