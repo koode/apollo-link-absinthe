@@ -8,12 +8,16 @@ const require = createRequire(import.meta.url);
 const distDirectory = new URL("../dist/", import.meta.url).pathname;
 const problems = [];
 
+/**
+ * @param {string} directory the directory to walk
+ * @returns {Promise<string[]>} the paths of every file under it
+ */
 async function files(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
   const nested = await Promise.all(
     entries.map((entry) => {
       const path = join(directory, entry.name);
-      return entry.isDirectory() ? files(path) : [path];
+      return entry.isDirectory() ? files(path) : Promise.resolve([path]);
     }),
   );
   return nested.flat();
@@ -52,14 +56,22 @@ Object.defineProperty(globalThis, "window", {
   },
 });
 
+/** @type {unknown} */
 const esm = await import(new URL("../dist/index.mjs", import.meta.url).href);
-const cjs = require("../dist/index.js");
-for (const [format, module] of [
+/** @type {unknown} */
+const cjs = require(join(distDirectory, "index.js"));
+/** @type {[string, unknown][]} */
+const builds = [
   ["esm", esm],
   ["cjs", cjs],
-])
+];
+for (const [format, module] of builds)
   for (const name of rootApi)
-    if (typeof module[name] !== "function")
+    if (
+      typeof module !== "object" ||
+      module === null ||
+      typeof Reflect.get(module, name) !== "function"
+    )
       problems.push(`${format} root entry does not export ${name}`);
 
 if (problems.length > 0) {

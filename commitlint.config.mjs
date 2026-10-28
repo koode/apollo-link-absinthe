@@ -12,8 +12,9 @@ const config = {
   plugins: [
     {
       rules: {
+        /** @param {{ subject: string | null }} commit the parsed commit message */
         "subject-lowercase-start": ({ subject }) => [
-          subject === null || !/^[A-Z]/.test(subject),
+          subject === null || !/^[A-Z]/u.test(subject),
           "subject must not start with an uppercase letter",
         ],
       },
