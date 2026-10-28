@@ -25,7 +25,7 @@ export function resyncOnJoin(
 ): () => void {
   const include = options.include ?? "active";
   return transport.on("joined", ({ first }) => {
-    if (first && options.skipFirst) return;
+    if (first && options.skipFirst === true) return;
     // A failed refetch reaches the observers of that query; it must not become an unhandled rejection here.
     Promise.resolve(client.refetchQueries({ include })).then(
       undefined,

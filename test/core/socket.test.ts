@@ -108,6 +108,18 @@ describe("authToken (phoenix 1.8)", () => {
     ]);
   });
 
+  test("an empty token counts as no token", async () => {
+    const { transport } = managed({
+      Socket: Socket18,
+      auth: { token: () => "" },
+    });
+    transport.subscribe({ query: tickedQuery, variables: {} }, record().sink);
+    await nextEvent(transport, "joined");
+    expect((await server.state()).connects).toEqual([
+      { token: null, via: "none" },
+    ]);
+  });
+
   test("phoenix 1.8.0 to 1.8.8 keep authToken as a string; that works too", async () => {
     const { transport } = managed({
       Socket: SocketWithStringAuthToken,

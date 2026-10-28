@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { defineConfig } from "tsdown";
 
 const apollo3Alias = "@apollo/client-3";
-const apolloPackages = /^@apollo\/client(-3)?(\/|$)/;
+const apolloPackages = /^@apollo\/client(-3)?(\/|$)/u;
 
 /**
  * The repo installs Apollo 3 as `@apollo/client-3` next to Apollo 4, so each

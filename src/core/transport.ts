@@ -418,7 +418,7 @@ export class Transport implements IAbsintheTransport {
     this.joinedPending = false;
     this.suspects = [];
     this.inFlight = 0;
-    for (const entry of [...this.entries.values()]) {
+    for (const entry of this.entries.values()) {
       this.clearRetryTimer(entry);
       if (entry.state === "closing") {
         this.entries.delete(entry.key);
@@ -598,7 +598,7 @@ export class Transport implements IAbsintheTransport {
       .receive("ok", (reply) => {
         if (!settle()) return;
         if (isRecord(reply) && ("data" in reply || "errors" in reply)) {
-          safely(() => operation.sink.next(reply as IAbsintheResult));
+          safely(() => operation.sink.next(reply));
           safely(() => operation.sink.complete());
           return;
         }
@@ -650,7 +650,7 @@ export class Transport implements IAbsintheTransport {
     }
     const entry = this.byId.get(subscriptionId);
     if (entry) {
-      this.deliver(entry, result as IAbsintheResult);
+      this.deliver(entry, result);
       return;
     }
     // Absinthe subscribes before it replies, so data can beat the `ok` with the id.

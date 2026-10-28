@@ -18,7 +18,6 @@ import {
   runOperation,
 } from "./link/operation";
 import {
-  type IRefetchingClient,
   type IResyncOptions,
   resyncOnJoin as resyncTransport,
 } from "./link/resync";
@@ -76,9 +75,5 @@ export function resyncOnJoin(
   transport: IAbsintheTransport,
   options: IResyncOptions = {},
 ): () => void {
-  return resyncTransport(
-    client as unknown as IRefetchingClient,
-    transport,
-    options,
-  );
+  return resyncTransport(client, transport, options);
 }

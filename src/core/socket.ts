@@ -55,7 +55,9 @@ export interface IManagedSocketOptions<
   /** Default: full jitter, a random wait up to 1 s doubled per try, capped at 30 s, at least 500 ms. */
   reconnectAfterMs?: (tries: number) => number;
   /** Passed to `new Socket` (heartbeatIntervalMs, logger, transport, params, ...). */
-  socketOptions?: Record<string, unknown>;
+  socketOptions?: Record<string, unknown> & {
+    params?: Record<string, unknown> | (() => Record<string, unknown>);
+  };
   /** The Socket class. Default: `Socket` from `phoenix`. */
   Socket?: PhoenixSocketConstructor<TSocket>;
   /** Options of the socket's Absinthe transport. */
@@ -94,6 +96,11 @@ function authTokenStyleOf(socket: object): AuthTokenStyle {
   );
 }
 
+/** An empty token is no token, the same as null or undefined. */
+function tokenOrNull(token: SocketToken): string | null {
+  return typeof token === "string" && token !== "" ? token : null;
+}
+
 function isPromiseLike(value: unknown): value is PromiseLike<SocketToken> {
   return (
     typeof value === "object" &&
@@ -108,15 +115,15 @@ function createInertSocket(): IManagedPhoenixSocketLike {
     join: () => push,
     leave: () => push,
     push: () => push,
-    onError: () => undefined,
-    onClose: () => undefined,
+    onError: () => {},
+    onClose: () => {},
   };
   return {
     channel: () => channel,
-    onOpen: () => undefined,
-    onClose: () => undefined,
-    onError: () => undefined,
-    onMessage: () => undefined,
+    onOpen: () => {},
+    onClose: () => {},
+    onError: () => {},
+    onMessage: () => {},
     connect: () => {},
     disconnect: (callback) => callback?.(),
     isConnected: () => false,
@@ -170,7 +177,7 @@ export function createPhoenixSocket<
   const holder = socket as IAuthTokenHolder;
 
   const applyToken = (token: SocketToken) => {
-    currentToken = token || null;
+    currentToken = tokenOrNull(token);
     if (authTokenStyle === null) return;
     const value = currentToken;
     if (value === null) holder.authToken = undefined;
@@ -261,8 +268,8 @@ export function createPhoenixSocket<
     transport,
     async refreshAuth() {
       if (!auth || closed) return;
-      const token = (await auth.token()) || null;
-      if (token === currentToken || !auth.reconnectOnChange) return;
+      const token = tokenOrNull(await auth.token());
+      if (token === currentToken || auth.reconnectOnChange !== true) return;
       if (!socket.isConnected()) return;
       socket.disconnect(() => socket.connect());
     },
