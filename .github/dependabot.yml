@@ -5,3 +5,6 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Conventional Commits, as commitlint checks them in CI.
+    commit-message:
+      prefix: "ci"
