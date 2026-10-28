@@ -2,11 +2,10 @@ import { describe, expect, test } from "vitest";
 import { createAbsintheTransport } from "../../src";
 import { server } from "../support/control";
 import { collectEvents, eventually, nextEvent, sleep } from "../support/events";
+import { anyLocation, stringContaining } from "../support/matchers";
 import { tickedQuery } from "../support/queries";
 import { record } from "../support/recorder";
 import { openSocket } from "../support/sockets";
-
-const location = { line: expect.any(Number), column: expect.any(Number) };
 
 describe("queries and mutations over the socket (operations: 'all')", () => {
   test("they are off by default", () => {
@@ -57,7 +56,7 @@ describe("queries and mutations over the socket (operations: 'all')", () => {
           {
             message: "Query failed",
             path: ["failing"],
-            locations: [location],
+            locations: [anyLocation],
             extensions: { code: "QUERY_FAILED" },
           },
         ],
@@ -67,8 +66,8 @@ describe("queries and mutations over the socket (operations: 'all')", () => {
       {
         errors: [
           {
-            message: expect.stringContaining("missing"),
-            locations: [location],
+            message: stringContaining("missing"),
+            locations: [anyLocation],
           },
         ],
       },

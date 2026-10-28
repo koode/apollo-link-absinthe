@@ -26,6 +26,7 @@ import {
 } from "../../src/apollo3";
 import { server } from "../support/control";
 import { eventually, nextEvent } from "../support/events";
+import { anyLocation } from "../support/matchers";
 import { openSocket } from "../support/sockets";
 import { formatGraphQLError, hasErrorCode } from "./errorHelpers";
 
@@ -99,8 +100,8 @@ function harness(options: ITransportOptions = {}): IHarness {
       : splitSubscriptions(absintheLink, httpStub),
   ]);
   const client = new ApolloClient({ link, cache: new InMemoryCache() });
-  clients.push(client as ApolloClient<unknown>);
-  return { client: client as ApolloClient<unknown>, transport, linkErrors };
+  clients.push(client);
+  return { client, transport, linkErrors };
 }
 
 function renderSubscription(
@@ -113,8 +114,6 @@ function renderSubscription(
   );
   return renderHook(() => useSubscription(query, { variables }), { wrapper });
 }
-
-const location = { line: expect.any(Number), column: expect.any(Number) };
 
 describe("Apollo 3: GraphQL errors become ApolloError with graphQLErrors intact", () => {
   test("data flows into useSubscription", async () => {
@@ -141,7 +140,7 @@ describe("Apollo 3: GraphQL errors become ApolloError with graphQLErrors intact"
         message: "Not allowed here",
         extensions: { code: "FORBIDDEN" },
         reason: "test",
-        locations: [location],
+        locations: [anyLocation],
       },
     ]);
     expect(hasErrorCode(error, "FORBIDDEN")).toBe(true);
@@ -170,7 +169,7 @@ describe("Apollo 3: GraphQL errors become ApolloError with graphQLErrors intact"
       {
         message: "Publish failed",
         path: ["failsAtPublish"],
-        locations: [location],
+        locations: [anyLocation],
         extensions: { code: "PUBLISH_FAILED" },
         detail: "kept",
       },
@@ -244,19 +243,19 @@ describe("Apollo 3: what is not an error, and wiring", () => {
 
   test("queries over the socket work with operations: 'all'", async () => {
     const { client } = harness({ operations: "all" });
-    const { data } = await client.query({ query: hello });
+    const { data } = await client.query<{ hello: string }>({ query: hello });
     expect(data).toEqual({ hello: "Hello world" });
   });
 
   test("a socket per operation, as an app picks one per auth state", async () => {
     const socket = openSocket({ token: "user:alice" });
-    const source = vi.fn((_operation: Operation) => socket);
+    const source = vi.fn<(operation: Operation) => typeof socket>(() => socket);
     const client = new ApolloClient({
       link: createAbsintheLink(source, { transport: { operations: "all" } }),
       cache: new InMemoryCache(),
     });
-    clients.push(client as ApolloClient<unknown>);
-    const { data } = await client.query({ query: hello });
+    clients.push(client);
+    const { data } = await client.query<{ hello: string }>({ query: hello });
     expect(data).toEqual({ hello: "Hello world" });
     expect(source.mock.calls[0]?.[0].operationName).toBe("Hello");
   });
@@ -271,20 +270,23 @@ describe("Apollo 3: what is not an error, and wiring", () => {
       link: recorderLink,
       cache: new InMemoryCache(),
     });
-    clients.push(client as ApolloClient<unknown>);
+    clients.push(client);
     client.subscribe({ query: ticked }).subscribe({});
     void client.query({ query: hello });
-    expect(operations.map(isSubscription)).toEqual([true, false]);
+    expect(operations.map((operation) => isSubscription(operation))).toEqual([
+      true,
+      false,
+    ]);
   });
 
   test("on the server everything goes over HTTP and the source is never called", async () => {
     vi.stubGlobal("window", undefined);
     try {
-      const source = vi.fn();
+      const source = vi.fn<(operation: Operation) => null>();
       const link = splitSubscriptions(createAbsintheLink(source), httpStub);
       const results: unknown[] = [];
       const client = new ApolloClient({ link, cache: new InMemoryCache() });
-      clients.push(client as ApolloClient<unknown>);
+      clients.push(client);
       client.subscribe({ query: ticked }).subscribe({
         next: (value) => results.push(value),
       });

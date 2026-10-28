@@ -6,6 +6,7 @@ import {
   type IManagedPhoenixSocketLike,
   type IManagedSocket,
   type IManagedSocketOptions,
+  type SocketToken,
 } from "../../src";
 import { server, socketUrl } from "../support/control";
 import { collectEvents, nextEvent, sleep } from "../support/events";
@@ -171,7 +172,7 @@ describe("params (every phoenix version)", () => {
 
   test("static params may be a function; no token sends only those", async () => {
     const { transport } = managed({
-      auth: { token: () => undefined, send: paramsAuth },
+      auth: { token: () => null, send: paramsAuth },
       socketOptions: { params: () => ({ client: "test" }) },
     });
     transport.subscribe({ query: tickedQuery, variables: {} }, record().sink);
@@ -242,19 +243,15 @@ describe("params (every phoenix version)", () => {
 
 describe("token failures", () => {
   test("a token read that throws or rejects is a CONNECT_FAILED event, then it is read again", async () => {
-    let calls = 0;
     const failure = new Error("token store unavailable");
-    const { transport } = managed({
-      auth: {
-        token: () => {
-          calls++;
-          if (calls === 1) throw failure;
-          if (calls === 2) return Promise.reject(failure);
-          return "user:alice";
-        },
-        send: paramsAuth,
-      },
-    });
+    const token = vi
+      .fn<() => SocketToken | Promise<SocketToken>>()
+      .mockImplementationOnce(() => {
+        throw failure;
+      })
+      .mockImplementationOnce(() => Promise.reject(failure))
+      .mockReturnValue("user:alice");
+    const { transport } = managed({ auth: { token, send: paramsAuth } });
     const errors = collectEvents(transport, "error");
     transport.subscribe({ query: tickedQuery, variables: {} }, record().sink);
     await nextEvent(transport, "joined");
@@ -263,18 +260,19 @@ describe("token failures", () => {
       expect.objectContaining({ code: "CONNECT_FAILED", cause: failure }),
       expect.objectContaining({ code: "CONNECT_FAILED", cause: failure }),
     ]);
-    expect(calls).toBe(3);
+    expect(token).toHaveBeenCalledTimes(3);
   });
 
   test("a token that arrives after a disconnect does not connect", async () => {
-    let resolveToken: (token: string) => void = () => {};
-    let rejectToken: (error: Error) => void = () => {};
+    const reads: {
+      resolve: (token: string) => void;
+      reject: (error: Error) => void;
+    }[] = [];
     const { socket } = managed({
       auth: {
         token: () =>
           new Promise<string>((resolve, reject) => {
-            resolveToken = resolve;
-            rejectToken = reject;
+            reads.push({ resolve, reject });
           }),
         send: paramsAuth,
       },
@@ -282,35 +280,33 @@ describe("token failures", () => {
     socket.connect();
     socket.connect();
     socket.disconnect();
-    resolveToken("user:alice");
+    reads.at(-1)?.resolve("user:alice");
 
     socket.connect();
     socket.disconnect();
-    rejectToken(new Error("too late"));
+    reads.at(-1)?.reject(new Error("too late"));
     await sleep(150);
     expect(socket.isConnected()).toBe(false);
     expect((await server.state()).connects).toEqual([]);
   });
 
   test("a connect during the wait after a failed read waits for that retry", async () => {
-    let calls = 0;
+    const token = vi
+      .fn<() => SocketToken>()
+      .mockImplementationOnce(() => {
+        throw new Error("not yet");
+      })
+      .mockReturnValue("user:alice");
     const { socket, transport } = managed({
       reconnectAfterMs: () => 100,
-      auth: {
-        token: () => {
-          calls++;
-          if (calls === 1) throw new Error("not yet");
-          return "user:alice";
-        },
-        send: paramsAuth,
-      },
+      auth: { token, send: paramsAuth },
     });
     socket.connect();
     socket.connect();
-    expect(calls).toBe(1);
+    expect(token).toHaveBeenCalledTimes(1);
     transport.subscribe({ query: tickedQuery, variables: {} }, record().sink);
     await nextEvent(transport, "joined");
-    expect(calls).toBe(2);
+    expect(token).toHaveBeenCalledTimes(2);
   });
 
   test("a disconnect during the wait after a failed read cancels the retry", async () => {
@@ -351,6 +347,7 @@ describe("the managed socket", () => {
       record().sink,
     );
     await nextEvent(created.transport, "joined");
+    expect(created.socket).toBeInstanceOf(Socket18);
   });
 
   test("close completes the observers, disconnects, and stays closed", async () => {
@@ -378,16 +375,16 @@ describe("the managed socket", () => {
   test("authToken with a phoenix client older than 1.8 throws", () => {
     expect(() =>
       createPhoenixSocket(socketUrl(), {
-        Socket: Socket16 as unknown as typeof Socket,
+        Socket: Socket16,
         socketOptions,
         auth: { token: () => "user:alice" },
       }),
-    ).toThrow(/needs the phoenix client 1.8/);
+    ).toThrow(/needs the phoenix client 1.8/u);
   });
 
   test("on the server it builds no socket: the transport is disposed and completes at once", async () => {
     vi.stubGlobal("window", undefined);
-    const SocketClass = vi.fn();
+    const SocketClass = vi.fn<() => void>();
     const { socket, transport, refreshAuth, close } = createPhoenixSocket(
       socketUrl(),
       {
@@ -415,7 +412,7 @@ describe("the managed socket", () => {
     socket.onError(() => {});
     socket.onMessage(() => {});
     socket.connect();
-    const disconnected = vi.fn();
+    const disconnected = vi.fn<() => void>();
     socket.disconnect(disconnected);
     socket.disconnect();
     expect(disconnected).toHaveBeenCalled();

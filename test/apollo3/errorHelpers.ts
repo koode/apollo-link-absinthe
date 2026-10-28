@@ -14,13 +14,22 @@ export interface IFormattedError {
   description: string;
 }
 
+function isErrorLike(
+  value: unknown,
+): value is { extensions?: { code?: unknown } } {
+  return typeof value === "object" && value !== null;
+}
+
 function getErrorCodes(error: ApolloError | ErrorResponse): string[] {
   const serverErrors = (
     error.networkError as IServerErrorLike | null | undefined
   )?.result?.errors;
-  const graphQLErrors: { extensions?: { code?: unknown } }[] = [
+  const serverErrorList: unknown[] = Array.isArray(serverErrors)
+    ? serverErrors
+    : [];
+  const graphQLErrors = [
     ...(error.graphQLErrors ?? []),
-    ...(Array.isArray(serverErrors) ? serverErrors : []),
+    ...serverErrorList.filter((serverError) => isErrorLike(serverError)),
   ];
   return graphQLErrors.flatMap(({ extensions }) =>
     typeof extensions?.code === "string" ? [extensions.code] : [],
@@ -44,7 +53,7 @@ export function formatGraphQLError(
       description: `(${name}): ${message}`,
     };
   }
-  if (error.graphQLErrors?.length) {
+  if (error.graphQLErrors !== undefined && error.graphQLErrors.length > 0) {
     const description = error.graphQLErrors
       .map((graphQLError) => graphQLError.message)
       .join(", ");

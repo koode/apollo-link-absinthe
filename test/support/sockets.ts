@@ -30,7 +30,7 @@ export interface IOpenSocketOptions {
 
 /** A real phoenix socket on the test server. The token goes in the params, which every phoenix version supports. */
 export function openSocket(options: IOpenSocketOptions = {}): PhoenixSocket {
-  const params = options.token ? { token: options.token } : {};
+  const params = options.token === undefined ? {} : { token: options.token };
   const socket = new Socket(socketUrl(), {
     ...fastSocketOptions,
     params,

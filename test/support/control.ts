@@ -29,7 +29,7 @@ export function serverUrl(): string {
 }
 
 export function socketUrl(): string {
-  return `${serverUrl().replace(/^http/, "ws")}/socket`;
+  return `${serverUrl().replace(/^http/u, "ws")}/socket`;
 }
 
 async function post(path: string, body: object = {}): Promise<void> {

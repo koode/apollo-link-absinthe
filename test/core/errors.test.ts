@@ -6,6 +6,7 @@ import {
 } from "../../src";
 import { server } from "../support/control";
 import { collectEvents, eventually, nextEvent, sleep } from "../support/events";
+import { anyLocation, anyString } from "../support/matchers";
 import {
   crashesQuery,
   failsAtPublishQuery,
@@ -17,8 +18,6 @@ import {
 import { record } from "../support/recorder";
 import { openSocket } from "../support/sockets";
 
-const location = { line: expect.any(Number), column: expect.any(Number) };
-
 describe("GraphQL errors stay GraphQL errors", () => {
   test("a refusal without a code reaches the observer as result.errors, then the subscription ends", async () => {
     const transport = createAbsintheTransport(openSocket());
@@ -29,7 +28,9 @@ describe("GraphQL errors stay GraphQL errors", () => {
     expect(recorder.events).toEqual([
       {
         type: "next",
-        result: { errors: [{ message: "FORBIDDEN", locations: [location] }] },
+        result: {
+          errors: [{ message: "FORBIDDEN", locations: [anyLocation] }],
+        },
       },
       { type: "complete" },
     ]);
@@ -54,7 +55,7 @@ describe("GraphQL errors stay GraphQL errors", () => {
               message: "Not allowed here",
               extensions: { code: "FORBIDDEN" },
               reason: "test",
-              locations: [location],
+              locations: [anyLocation],
             },
           ],
         },
@@ -83,7 +84,7 @@ describe("GraphQL errors stay GraphQL errors", () => {
           {
             message: "Publish failed",
             path: ["failsAtPublish"],
-            locations: [location],
+            locations: [anyLocation],
             extensions: { code: "PUBLISH_FAILED" },
             detail: "kept",
           },
@@ -108,7 +109,7 @@ describe("GraphQL errors stay GraphQL errors", () => {
           {
             message: "Sign in first",
             extensions: { code: "UNAUTHENTICATED" },
-            locations: [location],
+            locations: [anyLocation],
           },
         ],
       },
@@ -240,7 +241,7 @@ describe("transport errors", () => {
     await eventually(() => expect(errors).toHaveLength(2));
     expect(errors[1]).toMatchObject({
       code: "UNSUBSCRIBE_FAILED",
-      payload: { subscriptionId: expect.any(String) },
+      payload: { subscriptionId: anyString },
     });
   });
 

@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { createAbsintheTransport } from "../../src";
 import { server } from "../support/control";
 import { collectEvents, eventually, nextEvent, sleep } from "../support/events";
+import { stringMatching } from "../support/matchers";
 import {
   racedTickedQuery,
   sharedQuery,
@@ -33,7 +34,7 @@ describe("subscriptions against Absinthe", () => {
       {
         query: tickedQuery,
         variables: {},
-        subscriptionId: expect.stringMatching(/^__absinthe__:doc:/),
+        subscriptionId: stringMatching(/^__absinthe__:doc:/u),
       },
     ]);
     expect(transport.activeCount()).toBe(1);

@@ -402,11 +402,13 @@ describe("channel close and defaults", () => {
   test("teardowns returned without a subscription are safe to call", () => {
     const socket = new StubSocket();
     const transport = createAbsintheTransport(socket);
-    transport.execute(hello, record().sink)();
-    transport.dispose();
-    transport.dispose();
-    transport.subscribe(tick, record().sink)();
-    transport.execute(hello, record().sink)();
+    expect(() => {
+      transport.execute(hello, record().sink)();
+      transport.dispose();
+      transport.dispose();
+      transport.subscribe(tick, record().sink)();
+      transport.execute(hello, record().sink)();
+    }).not.toThrow();
   });
 });
 
@@ -432,9 +434,9 @@ describe("errors and backoff", () => {
     random.mockReturnValue(0);
     expect(jitteredReconnectAfterMs(3)).toBe(500);
     expect(docRetryBackoffMs(2)).toBe(1000);
-    expect([1, 2, 3, 4, 9].map(phoenixRejoinAfterMs)).toEqual([
-      1000, 2000, 5000, 10_000, 10_000,
-    ]);
+    expect([1, 2, 3, 4, 9].map((tries) => phoenixRejoinAfterMs(tries))).toEqual(
+      [1000, 2000, 5000, 10_000, 10_000],
+    );
     random.mockRestore();
   });
 });

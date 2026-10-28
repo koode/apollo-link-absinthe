@@ -33,7 +33,9 @@ async function waitForHealth(url: string, child: ChildProcess): Promise<void> {
     } catch {
       // Not listening yet.
     }
-    await new Promise((resolve) => setTimeout(resolve, 250));
+    await new Promise((resolve) => {
+      setTimeout(resolve, 250);
+    });
   }
   throw new Error(`The test server did not answer ${url} in time`);
 }
@@ -61,7 +63,9 @@ export async function teardown(): Promise<void> {
   if (!child || child.exitCode !== null) return;
   const exited = once(child, "exit");
   child.stdin?.end();
-  const timeout = new Promise((resolve) => setTimeout(resolve, stopTimeoutMs));
+  const timeout = new Promise((resolve) => {
+    setTimeout(resolve, stopTimeoutMs);
+  });
   await Promise.race([exited, timeout]);
   if (child.exitCode === null && child.pid !== undefined) child.kill();
 }

@@ -4,6 +4,7 @@ import {
   disposeAbsintheTransport,
   getAbsintheTransport,
   onAbsintheTransport,
+  type TransportStatus,
 } from "../../src";
 import { server } from "../support/control";
 import { collectEvents, eventually, nextEvent, sleep } from "../support/events";
@@ -159,7 +160,7 @@ describe("ownership", () => {
     stop();
     expect(getAbsintheTransport(socket)).toBe(transport);
     expect(() => createAbsintheTransport(socket)).toThrow(
-      /already has an Absinthe transport/,
+      /already has an Absinthe transport/u,
     );
     expect(created).toEqual([[transport, socket]]);
     getAbsintheTransport(openSocket());
@@ -216,7 +217,7 @@ describe("ownership", () => {
         throw failure;
       });
       const statuses = collectEvents(transport, "status");
-      const stopped = vi.fn();
+      const stopped = vi.fn<(status: TransportStatus) => void>();
       transport.on("status", stopped)();
       transport.subscribe(
         { query: tickedQuery, variables: {} },

@@ -25,6 +25,7 @@ import {
 } from "../../src";
 import { server } from "../support/control";
 import { eventually, nextEvent, sleep } from "../support/events";
+import { anyLocation } from "../support/matchers";
 import { openSocket } from "../support/sockets";
 
 const ticked = gql`
@@ -119,8 +120,17 @@ function harness(
   return { client, transport, linkErrors };
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: the test documents are untyped.
-type AnyData = any;
+interface ITick {
+  __typename: "Tick";
+  topic: string;
+  value: number;
+}
+
+/** The root fields the test subscriptions select; each test reads its own. */
+interface ISubscriptionData {
+  ticked?: ITick;
+  failsAtPublish?: ITick | null;
+}
 
 function renderSubscription(
   client: ApolloClient,
@@ -130,12 +140,13 @@ function renderSubscription(
   const wrapper = ({ children }: { children: ReactNode }) => (
     <ApolloProvider client={client}>{children}</ApolloProvider>
   );
-  return renderHook(() => useSubscription<AnyData>(query, { variables }), {
-    wrapper,
-  });
+  return renderHook(
+    () => useSubscription<ISubscriptionData>(query, { variables }),
+    {
+      wrapper,
+    },
+  );
 }
-
-const location = { line: expect.any(Number), column: expect.any(Number) };
 
 describe("Apollo 4: GraphQL errors reach the hook and the error link with their code", () => {
   test("data flows into useSubscription", async () => {
@@ -163,7 +174,7 @@ describe("Apollo 4: GraphQL errors reach the hook and the error link with their 
         message: "Not allowed here",
         extensions: { code: "FORBIDDEN" },
         reason: "test",
-        locations: [location],
+        locations: [anyLocation],
       },
     ]);
     expect(linkErrors).toHaveLength(1);
@@ -176,7 +187,7 @@ describe("Apollo 4: GraphQL errors reach the hook and the error link with their 
     const { result } = renderSubscription(client, refused);
     await eventually(() => expect(result.current.error).toBeDefined());
     expect((result.current.error as CombinedGraphQLErrors).errors).toEqual([
-      { message: "FORBIDDEN", locations: [location] },
+      { message: "FORBIDDEN", locations: [anyLocation] },
     ]);
   });
 
@@ -202,7 +213,7 @@ describe("Apollo 4: GraphQL errors reach the hook and the error link with their 
       {
         message: "Publish failed",
         path: ["failsAtPublish"],
-        locations: [location],
+        locations: [anyLocation],
         extensions: { code: "PUBLISH_FAILED" },
         detail: "kept",
       },
@@ -297,7 +308,7 @@ describe("Apollo 4: what is not an error", () => {
     await server.disconnect();
     await rejoined;
     await server.publish("ticked", 2);
-    await eventually(() => expect(result.current.data?.ticked.value).toBe(2));
+    await eventually(() => expect(result.current.data?.ticked?.value).toBe(2));
     expect(result.current.error).toBeUndefined();
     expect(linkErrors).toEqual([]);
   });
@@ -312,7 +323,7 @@ describe("Apollo 4: what is not an error", () => {
     await eventually(async () => expect(await server.docs()).toHaveLength(2));
     await sleep(200);
     await server.publish("ticked", 3);
-    await eventually(() => expect(result.current.data?.ticked.value).toBe(3));
+    await eventually(() => expect(result.current.data?.ticked?.value).toBe(3));
     expect(linkErrors).toEqual([]);
   });
 
@@ -336,7 +347,7 @@ describe("Apollo 4: wiring", () => {
   });
 
   test("a source function that returns nothing completes the operation", async () => {
-    const source = vi.fn((_operation: ApolloLink.Operation) => null);
+    const source = vi.fn<(operation: ApolloLink.Operation) => null>(() => null);
     const client = new ApolloClient({
       link: createAbsintheLink(source),
       cache: new InMemoryCache(),
@@ -366,13 +377,16 @@ describe("Apollo 4: wiring", () => {
     clients.push(client);
     client.subscribe({ query: ticked }).subscribe({});
     void client.query({ query: hello });
-    expect(operations.map(isSubscription)).toEqual([true, false]);
+    expect(operations.map((operation) => isSubscription(operation))).toEqual([
+      true,
+      false,
+    ]);
   });
 
   test("on the server everything goes over HTTP and the source is never called", async () => {
     vi.stubGlobal("window", undefined);
     try {
-      const source = vi.fn();
+      const source = vi.fn<(operation: ApolloLink.Operation) => null>();
       const absintheLink = createAbsintheLink(source);
       const link = splitSubscriptions(absintheLink, httpStub);
       const results: unknown[] = [];

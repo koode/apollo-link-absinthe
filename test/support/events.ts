@@ -12,11 +12,11 @@ export function nextEvent<TName extends keyof ITransportEvents>(
   accept: (value: EventValue<TName>) => boolean = () => true,
 ): Promise<EventValue<TName>> {
   return new Promise((resolve) => {
-    const stop = transport.on(name, ((value: EventValue<TName>) => {
+    const stop = transport.on(name, (value: EventValue<TName>) => {
       if (!accept(value)) return;
       stop();
       resolve(value);
-    }) as ITransportEvents[TName]);
+    });
   });
 }
 
@@ -26,14 +26,16 @@ export function collectEvents<TName extends keyof ITransportEvents>(
   name: TName,
 ): Array<EventValue<TName>> {
   const values: Array<EventValue<TName>> = [];
-  transport.on(name, ((value: EventValue<TName>) => {
+  transport.on(name, (value: EventValue<TName>) => {
     values.push(value);
-  }) as ITransportEvents[TName]);
+  });
   return values;
 }
 
 export function sleep(milliseconds: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+  return new Promise((resolve) => {
+    setTimeout(resolve, milliseconds);
+  });
 }
 
 /** vi.waitFor with room for a real server: the first connect of a run can take a second. */
