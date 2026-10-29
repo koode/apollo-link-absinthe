@@ -54,7 +54,6 @@ function isTransport(
 /** True for a subscription operation. */
 export function isSubscriptionOperation(operation: IOperationLike): boolean {
   const definition = getOperationAST(operation.query, operation.operationName);
-  // oxlint-disable-next-line typescript/no-unsafe-enum-comparison -- graphql 15 has no OperationTypeNode enum at runtime, and this package supports it; the string is what every version holds.
   return definition?.operation === "subscription";
 }
 
