@@ -1,5 +1,11 @@
 # apollo-link-absinthe
 
+## 0.1.1
+
+### Patch Changes
+
+- bc5ce98: Update development dependencies; the published code is unchanged.
+
 ## 0.1.0
 
 ### Minor Changes

@@ -1,6 +1,6 @@
 {
   "name": "apollo-link-absinthe",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "GraphQL subscriptions from Apollo Client to Absinthe over a Phoenix channel, with GraphQL errors kept intact.",
   "license": "MIT",
   "type": "commonjs",
